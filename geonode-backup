@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# Backup script, meant to me run at the geonode mirror.
+# Make sure to enable passwordless access from the mirror to the original site.
+# Authors: Jude Mwenda, Ariel Nunez
+# http://github.com/GFDRR
+
+#NOTE: This tool requires pgsql_schema_diff.py to be installed first
+# cd /usr/bin
+# https://raw.github.com/gist/380278/140b133ea52e55e63ea2bfae9630e14f22c80ac9/pgsql_schema_diff.py
+# chmod +x pgsql_schema_diff.py
+
+#FIXME: Add parameters on actual host then the directory and then the destination/ Mirror or backup. That is 
+#geonode-backup -d /data -s horn.rcmrd.org --t localhost - back up to mirror instance
+#geonode-backup /data - backup to local directory
+#geonode-backup /data --source=geonode@horn.rcmrd.org - back up to directory from live
+#geonode-backup /data --source=geonode@horn.rcmrd.org --target=localhost - backup from live to mirror
+#geonode-backup /data --source=geonode@horn.rcmrd.org --target=ubuntu@50.123.12.143 - backup from live to mirror
+
+if [ $# -eq 0 ];then
+    echo "Usage:"
+    echo "    geonode-backup username@host backup_dir"
+    exit 0
+else
+    args=("$@")
+    HOST=${args[0]}
+    BACKUP_DIR=${args[1]}
+    #FIXME(Jude): Make --mirror an option to the script. For now it is always enabled.
+    MIRROR=1
+fi
+
+#FIXME(Jude): Save the latest backup appending the date to it. Like geonode-2011-10-23.db
+
+set -v
+#1. Create a postgres dump on the original server home folder
+ssh $HOST "pg_dump -Fc geonode > ~/geonode.db"
+#2. Copy that file to the local mirror
+rsync -vrPtz -e ssh $HOST:geonode.db $BACKUP_DIR/geonode.db
+#3. Create a postgres dump of the postgis table
+sudo -u postgres pg_dump -Fc template_postgis > $BACKUP_DIR/template_postgis.db
+#4. Find the differences between the dump to be imported and the default postgis template
+rm -rf $BACKUP_DIR/dbcontents
+pgsql_schema_diff.py $BACKUP_DIR/template_postgis.db $BACKUP_DIR/geonode.db > $BACKUP_DIR/dbcontents
+#5. Sync the geoserver data directory
+rsync -vrPtz -e ssh $HOST:/var/lib/geoserver $BACKUP_DIR
+#6. Sync the customizations in /etc/geonode
+rsync -vrPtz -e ssh $HOST:/etc/geonode/* $BACKUP_DIR/config
+
+
+if [ -z "$MIRROR" ];
+then
+    echo
+else
+    #1. Drop the old database in the mirror. Uuuu scary.
+    sudo -u postgres dropdb geonode
+    #2. Create a new postgis enabled database
+    sudo -u postgres createdb -T template_postgis geonode -O geonode
+    #3. Load the backed up content to the database
+    sudo -u postgres pg_restore -L $BACKUP_DIR/dbcontents -vxO1d geonode $BACKUP_DIR/geonode.db
+    #4. Copy the backed up geoserver data dir to the local geonode installation
+    sudo rsync -vrPtz $BACKUP_DIR/geoserver /var/lib
+    #5. Restore the config in /etc/geonode
+    sudo rsync -vrPtz $BACKUP_DIR/config/* /etc/geonode
+    #6.we give ownership
+    sudo chown -R tomcat6:tomcat6 /var/lib/geoserver
+    #7. Restart apache and tomcat
+    sudo /etc/init.d/apache2 restart
+    sudo /etc/init.d/tomcat6 restart
+fi
+
+
+set +v
+
+echo
+echo "Done!"
