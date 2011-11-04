@@ -1,0 +1,10 @@
+===========================================================================
+This is a series of bash scripts/commands to be used to perform basic
+utilities for a GeoNode instance. This has several case scenarios which
+include:
+       *Backing up a geonode to a directory- $geonode-backup [origin] [destinati        on]
+       *Restoring a geonode from a backup- $geonode-backup /data/geonode-backup/geonode_backup2011Nov4
+       *Setting up a mirror by providing two datails the localserver and the remote address of the mirror server $geonode-backup localhost geonode@demo.geonode.org
+Hopefully in future we will look into backing up to an S3 service.
+While backing up time stamps will be attached and GWC files will not be 
+zipped,this is just cleaning and addition of more properties to the following script https://gist.github.com/1318669 
