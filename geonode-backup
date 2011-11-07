@@ -45,12 +45,12 @@ rsync -vrPtz -e ssh $HOST:geonode.db $BACKUP_DIR/geonode_$NOW/geonode.db
 rm -rf $BACKUP_DIR/geonode_$NOW/dbcontents
 pgsql_schema_diff.py $BACKUP_DIR/geonode_$NOW/template_postgis.db $BACKUP_DIR/geonode_$NOW/geonode.db > $BACKUP_DIR/geonode_$NOW/dbcontents
 #5. We deal with the GeoServer directory
-#rsync -vrPtz -e ssh $HOST:/var/lib/geoserver $BACKUP_DIR/geonode_$NOW/
+rsync -vrPtz -e ssh $HOST:/var/lib/geoserver $BACKUP_DIR/geonode_$NOW/
 #6. Sync the customisations of the file
 rsync -vrPtz -e ssh $HOST:/etc/geonode/* $BACKUP_DIR/geonode_$NOW/config
 #we need to add zipping support of the file and its subsequent removal
-zip -r $BACKUP_DIR/geonode_$NOW $BACKUP_DIR/geonode_$NOW
+zip -r geonode_$NOW $BACKUP_DIR/geonode_$NOW
 #we then delete the huge directory
-rm -r $BACKUP_DIR/geonode_$NOW
+rm -r $BACKUP_DIR/geonode_$NOW 
 
  
