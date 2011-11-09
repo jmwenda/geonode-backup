@@ -8,4 +8,9 @@ include:
 Hopefully in future we will look into backing up to an S3 service.
 While backing up time stamps will be attached and GWC files will not be 
 zipped,this is just cleaning and addition of more properties to the following script https://gist.github.com/1318669
-
+========================================================================
+To perform a back up/restore to a directory run the following command syntax
+geonode-backup account@serverip directory operation
+For example:
+geonode-backup geonode@horn.rcmrd.org data --backup
+geonode-backup geonode@horn.rcmrd.org data/geonode_2011_06_01/ --restore
