@@ -82,7 +82,20 @@ rm -r $BACKUP_DIR/geonode_$NOW
         gnmedia
         #2. We now deal with the geoserver files
         sudo rsync -vrPtz -e ssh $HOST:/var/lib/geoserver/* /var/lib/geoserver
-        #3. We then give ownership to the file
+        #3. We now deal with the database by getting the database dumps
+        ssh $HOST "pg_dump -Fc geonode > ~/geonode.db"
+        mkdir /tmp/geonode
+        rsync -vrPtz -e ssh $HOST:geonode.db /tmp/geonode/geonode.db
+        sudo -u postgres pg_dump -Fc template_postgis > /tmp/geonode/template_postgis.db
+        rm -rf /tmp/geonode/dbcontents
+        pgsql_schema_diff.py /tmp/geonode/template_postgis.db /tmp/geonode/geonode.db > /tmp/geonode/dbcontents
+        sudo /etc/init.d/apache2 stop
+        sudo /etc/init.d/tomcat6 stop
+        sudo -u postgres dropdb geonode
+        sudo -u postgres createdb -T template_postgis geonode -O geonode
+        sudo -u postgres pg_restore -L /tmp/geonode/dbcontents -vxO1d geonode /tmp/geonode/geonode.db
+
+        #4. We then give ownership to the file
         sudo chown -R tomcat6:tomcat6 /var/lib/geoserver
         sudo /etc/init.d/apache2 restart
         sudo /etc/init.d/tomcat6 restart
@@ -95,6 +108,7 @@ rm -r $BACKUP_DIR/geonode_$NOW
     esac
     shift
 done
+
 
 
 
