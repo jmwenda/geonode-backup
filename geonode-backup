@@ -76,7 +76,13 @@ zip -r geonode_$NOW $BACKUP_DIR/geonode_$NOW
 rm -r $BACKUP_DIR/geonode_$NOW
 
                                 ;;
-        -h | --help )           usage
+        -m | --mirror) echo "mirroring"
+        #1. we deal with the templating files first for now
+        sudo rsync -vrPtz -e ssh $HOST:/etc/geonode/* /etc/geonode
+        gnmedia
+        sudo /etc/init.d/apache2 restart
+                                ;;
+        -h | --help )           echo "Usage:"
                                 exit
                                 ;;
         * )                     usage
@@ -84,5 +90,6 @@ rm -r $BACKUP_DIR/geonode_$NOW
     esac
     shift
 done
+
 
 
