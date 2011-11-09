@@ -25,11 +25,33 @@ else
     args=("$@")
     HOST=${args[0]}
     BACKUP_DIR=${args[1]}
+    COMMAND=${args[2]}
     #FIXME(Jude): Make --mirror an option to the script. For now it is always enabled.
-    MIRROR=1
 fi
 
-#FIXME(Jude): Save the latest backup appending the date to it. Like geonode-2011-10-23.db
+while [ "$3" != "" ]; do
+    case $3 in
+        -r | --restore )
+         #now we perform the resttore on the geonode
+         echo "restoration in progress"
+         #1. We drop the geonode database we are restoring to
+         sudo -u postgres dropdb geonode
+         #2. we create a new postgis enabled database
+         sudo -u postgres createdb -T template_postgis geonode -O geonode
+         #3. We load the backed up database details to the newly created database
+         sudo -u postgres pg_restore -L $BACKUP_DIR/dbcontents -vxO1d geonode $BACKUP_DIR/geonode.db
+         #4. Copy the backed up geoserver data dir to the local geonode installation
+         sudo rsync -vrPtz $BACKUP_DIR/geoserver /var/lib
+         #5. Restore the config in /etc/geonode
+         sudo rsync -vrPtz $BACKUP_DIR/config/* /etc/geonode
+         #6.we give ownership
+         sudo chown -R tomcat6:tomcat6 /var/lib/geoserver
+         #7. Restart apache and tomcat
+         sudo /etc/init.d/apache2 restart
+         sudo /etc/init.d/tomcat6 restart
+         echo "done!"
+                                ;;
+        -b | --backup )
 #1.Get the database of the geonode instance
 #was having issues with this because of demanding password which i do not have at the moment for the amazon server
 ssh $HOST "pg_dump -Fc geonode > ~/geonode.db"
@@ -51,6 +73,16 @@ rsync -vrPtz -e ssh $HOST:/etc/geonode/* $BACKUP_DIR/geonode_$NOW/config
 #we need to add zipping support of the file and its subsequent removal
 zip -r geonode_$NOW $BACKUP_DIR/geonode_$NOW
 #we then delete the huge directory
-rm -r $BACKUP_DIR/geonode_$NOW 
+rm -r $BACKUP_DIR/geonode_$NOW
 
- 
+                                ;;
+        -h | --help )           usage
+                                exit
+                                ;;
+        * )                     usage
+                                exit 1
+    esac
+    shift
+done
+
+
