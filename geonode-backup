@@ -80,7 +80,12 @@ rm -r $BACKUP_DIR/geonode_$NOW
         #1. we deal with the templating files first for now
         sudo rsync -vrPtz -e ssh $HOST:/etc/geonode/* /etc/geonode
         gnmedia
+        #2. We now deal with the geoserver files
+        sudo rsync -vrPtz -e ssh $HOST:/var/lib/geoserver/* /var/lib/geoserver
+        #3. We then give ownership to the file
+        sudo chown -R tomcat6:tomcat6 /var/lib/geoserver
         sudo /etc/init.d/apache2 restart
+        sudo /etc/init.d/tomcat6 restart
                                 ;;
         -h | --help )           echo "Usage:"
                                 exit
@@ -90,6 +95,7 @@ rm -r $BACKUP_DIR/geonode_$NOW
     esac
     shift
 done
+
 
 
 
