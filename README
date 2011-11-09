@@ -14,3 +14,11 @@ geonode-backup account@serverip directory operation
 For example:
 geonode-backup geonode@horn.rcmrd.org data --backup
 geonode-backup geonode@horn.rcmrd.org data/geonode_2011_06_01/ --restore
+
+To perform a mirror
+geonode-backup source destination operation
+For example:
+geonode-backup geonode@horn.rcmrd.org ubuntu@localhost --restore
+
+Notes: 
+I tried to run the gnmedia within the scipt with little success,on the destination you may have to run gnmedia for the ui changes to reflect. You will also need to change the local_settings file with what you had before...am thinking the token is important here.
