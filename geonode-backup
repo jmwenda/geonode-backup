@@ -52,30 +52,31 @@ while [ "$3" != "" ]; do
          echo "done!"
                                 ;;
         -b | --backup )
-#1.Get the database of the geonode instance
+ #1.Get the database of the geonode instance
 #was having issues with this because of demanding password which i do not have at the moment for the amazon server
 ssh $HOST "pg_dump -Fc geonode > ~/geonode.db"
 #sudo -u postgres pg_dump -Fc geonode > ~/geonode.db
 date +"FORMAT"
 NOW=$(date +"%Y-%m-%d")
-mkdir $BACKUP_DIR/geonode_$NOW/
+#mkdir $BACKUP_DIR/geonode_$NOW/
 #2. we get a dump of the template of the postgis
-sudo -u postgres pg_dump -Fc template_postgis > $BACKUP_DIR/geonode_$NOW/template_postgis.db
+sudo -u postgres pg_dump -Fc template_postgis > $BACKUP_DIR/template_postgis.db
 #3. we copy the dump into the directory
-rsync -vrPtz -e ssh $HOST:geonode.db $BACKUP_DIR/geonode_$NOW/geonode.db
+rsync -vrPtz -e ssh $HOST:geonode.db $BACKUP_DIR/geonode.db
 #4. We deal with the differences between the template and the database
-rm -rf $BACKUP_DIR/geonode_$NOW/dbcontents
-pgsql_schema_diff.py $BACKUP_DIR/geonode_$NOW/template_postgis.db $BACKUP_DIR/geonode_$NOW/geonode.db > $BACKUP_DIR/geonode_$NOW/dbcontents
+rm -rf $BACKUP_DIR/dbcontents
+pgsql_schema_diff.py $BACKUP_DIR/template_postgis.db $BACKUP_DIR/geonode.db > $BACKUP_DIR/dbcontents
 #5. We deal with the GeoServer directory
-rsync -vrPtz -e ssh $HOST:/var/lib/geoserver $BACKUP_DIR/geonode_$NOW/
+rsync --exclude gwc/ -vrPtz -e  ssh $HOST:/var/lib/geoserver $BACKUP_DIR/
 #6. Sync the customisations of the file
-rsync -vrPtz -e ssh $HOST:/etc/geonode/* $BACKUP_DIR/geonode_$NOW/config
+rsync -vrPtz -e ssh $HOST:/etc/geonode/* $BACKUP_DIR/config
 #we need to add zipping support of the file and its subsequent removal
-zip -r geonode_$NOW $BACKUP_DIR/geonode_$NOW
+zip -9 -r  geonode_$NOW.zip $BACKUP_DIR/
 #we then delete the huge directory
-rm -r $BACKUP_DIR/geonode_$NOW
+#rm -r $BACKUP_DIR/geonode_$NOW 
 
                                 ;;
+
         -m | --mirror) echo "mirroring"
         #1. we deal with the templating files first for now
         sudo rsync -vrPtz -e ssh $HOST:/etc/geonode/* /etc/geonode
