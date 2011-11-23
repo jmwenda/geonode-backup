@@ -15,17 +15,13 @@ For example:
 geonode-backup geonode@horn.rcmrd.org data --backup
 geonode-backup geonode@horn.rcmrd.org data/geonode_2011_06_01/ --restore
 
+In the event you need to restore to a freshly installed ubuntu remember to change to PSQL and change the password, or alternatively change the password
+on the local_settings.py file to match. This is to enable the database connectivity.
+
 To perform a mirror
 geonode-backup source destination operation
 For example:
 geonode-backup geonode@horn.rcmrd.org ubuntu@localhost --mirror
 
-Notes: 
-I tried to run the gnmedia within the scipt with little success,on the destination you may have to run gnmedia for the ui changes to reflect. You will also need to change the local_settings file with what you had before...am thinking the token is important here.
-At the moment i do not think it does the mirroring it the destination is at another IP address. IE it has to be done on the destination computer for now.
-Feel free to provide feedback. Feeling that methods could make the code less. Confirmed the tests, the database mirror each other same with geoserver. One may have to run gnmedia after.
-
-IMPORTANT
-This does not yet do restore and backup to a remote destination i.e external server or amazon instance. Alot of the code could be reused using functions
 
 
