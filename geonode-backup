@@ -100,6 +100,7 @@ zip -9 -r  geonode_$NOW.zip $BACKUP_DIR/
 
         #4. We then give ownership to the file
         sudo chown -R tomcat6:tomcat6 /var/lib/geoserver
+        sudo geonode collectstatic -v0
         sudo /etc/init.d/apache2 restart
         sudo /etc/init.d/tomcat6 restart
                                 ;;
