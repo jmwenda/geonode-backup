@@ -46,6 +46,8 @@ while [ "$3" != "" ]; do
          sudo rsync -vrPtz $BACKUP_DIR/config/* /etc/geonode
          #6.we give ownership
          sudo chown -R tomcat6:tomcat6 /var/lib/geoserver
+         #7. We do the collect static stuff
+         sudo geonode collectstatic -v0
          #7. Restart apache and tomcat
          sudo /etc/init.d/apache2 restart
          sudo /etc/init.d/tomcat6 restart
