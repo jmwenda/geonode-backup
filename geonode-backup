@@ -3,8 +3,7 @@
 # Backup script, meant to me run at the geonode mirror.
 # Make sure to enable passwordless access from the mirror to the original site.
 # Authors: Jude Mwenda, Ariel Nunez
-# http://github.com/GFDRR
-
+# Minor Changes by: Emmanuel Crown
 #NOTE: This tool requires pgsql_schema_diff.py to be installed first
 # cd /usr/bin
 # https://raw.github.com/gist/380278/140b133ea52e55e63ea2bfae9630e14f22c80ac9/pgsql_schema_diff.py
@@ -39,7 +38,12 @@ while [ "$3" != "" ]; do
          #2. we create a new postgis enabled database
          sudo -u postgres createdb -T template_postgis geonode -O geonode
          #3. We load the backed up database details to the newly created database
+	 # -i --ignore passed as a forth parament to skip loading of the database details when not applicable to avoid conflict errors
+	 if [ "$4" == "-i" ]; then
+	 echo "skipped restoration of backed up database..."
+	 else
          sudo -u postgres pg_restore -L $BACKUP_DIR/dbcontents -vxO1d geonode $BACKUP_DIR/geonode.db
+	 fi
          #4. Copy the backed up geoserver data dir to the local geonode installation
          sudo rsync -vrPtz $BACKUP_DIR/geoserver /var/lib
          #5. Restore the config in /etc/geonode
@@ -112,8 +116,3 @@ zip -9 -r  geonode_$NOW.zip $BACKUP_DIR/
     esac
     shift
 done
-
-
-
-
-
